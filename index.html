@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bullet Journal Aesthetic</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            journal: {
+              bg: '#f4ede2',
+              darkBg: '#1e1b18',
+              paper: '#fcf8f2',
+              darkPaper: '#2a2622',
+              pink: '#f7d6d0',
+              accentPink: '#e8a598',
+              purple: '#e2d5f8',
+              green: '#d5f0e2',
+              yellow: '#fceecb',
+              blue: '#d5eaf8',
+              ink: '#4a3f35',
+              darkInk: '#ebdcd0'
+            }
+          },
+          fontFamily: {
+            hand: ['"Patrick Hand"', 'cursive'],
+            title: ['"Caveat"', 'cursive'],
+            sans: ['"Poppins"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Texture and dot grid background */
+    .dotted-bg {
+      background-image: radial-gradient(#d1c7b7 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+    }
+    .dark .dotted-bg {
+      background-image: radial-gradient(#4d4338 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+    }
+    
+    .grid-bg {
+      background-image: linear-gradient(to right, rgba(210,195,180,0.2) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(210,195,180,0.2) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+
+    /* Washi Tape Effect */
+    .washi-tape {
+      background: rgba(243, 203, 191, 0.75);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      clip-path: polygon(0% 0%, 100% 2%, 98% 98%, 2% 100%);
+    }
+
+    /* Custom Scrollbars inside pages */
+    .page-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .page-scroll::-webkit-scrollbar-thumb {
+      background: #d4a373;
+      border-radius: 4px;
+    }
+
+    /* Circular Habit SVG Wheel */
+    .polar-grid circle, .polar-grid line {
+      stroke: rgba(180, 160, 140, 0.3);
+      stroke-width: 1;
+      fill: none;
+    }
+
+    /* 3D Book Page Flip Engine */
+    .book-wrapper {
+      perspective: 1500px;
+    }
+    .journal-book {
+      position: relative;
+      width: 100%;
+      max-width: 850px;
+      height: 580px;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+    }
+    .page-sheet {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: #fcf8f2;
+      transform-origin: left center;
+      transition: transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1);
+      transform-style: preserve-3d;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 0 12px 12px 0;
+      overflow: hidden;
+    }
+    .dark .page-sheet {
+      background: #2a2622;
+    }
+    .page-sheet.flipped {
+      transform: rotateY(-180deg);
+    }
+    .page-front, .page-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      top: 0;
+      left: 0;
+    }
+    .page-back {
+      transform: rotateY(180deg);
+    }
+    .page-sheet.left-fixed {
+      left: 0;
+      transform-origin: right center;
+      border-radius: 12px 0 0 12px;
+    }
+    .page-sheet.right-dynamic {
+      left: 50%;
+    }
+  </style>
+</head>
+<body class="bg-journal-bg dark:bg-journal-darkBg text-journal-ink dark:text-journal-darkInk font-sans min-h-screen transition-colors duration-300 flex flex-col items-center justify-between p-2 md:p-6 select-none overflow-x-hidden">
+
+  <!-- Top Toolbar -->
+  <header class="w-full max-w-5xl flex flex-wrap justify-between items-center bg-journal-paper/80 dark:bg-journal-darkPaper/80 backdrop-blur-sm p-3 px-6 rounded-2xl shadow-md border border-journal-ink/10 mb-4 z-20 gap-3">
+    <div class="flex items-center gap-2">
+      <i data-lucide="book-open" class="w-6 h-6 text-journal-accentPink"></i>
+      <h1 class="font-title text-2xl font-bold tracking-wide">Bullet Journal</h1>
+    </div>
+
+    <!-- Book Navigation Controls -->
+    <div class="flex items-center gap-3">
+      <button id="btn-prev" class="p-2 rounded-full hover:bg-journal-pink/50 dark:hover:bg-journal-ink/40 transition active:scale-95" title="Página Anterior">
+        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+      </button>
+      <span id="page-num" class="font-hand text-lg font-bold min-w-[90px] text-center">Pag 1 - 2 / 6</span>
+      <button id="btn-next" class="p-2 rounded-full hover:bg-journal-pink/50 dark:hover:bg-journal-ink/40 transition active:scale-95" title="Siguiente Página">
+        <i data-lucide="chevron-right" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <!-- Toggles (Language & Dark Mode) -->
+    <div class="flex items-center gap-3">
+      <!-- Language Toggle -->
+      <button id="btn-lang" class="px-3 py-1.5 rounded-xl bg-journal-yellow/80 dark:bg-journal-ink/50 text-xs font-semibold uppercase tracking-wider flex items-center gap-1 hover:opacity-90 transition">
+        <i data-lucide="globe" class="w-4 h-4"></i>
+        <span id="lang-label">ES</span>
+      </button>
+
+      <!-- Dark Mode Toggle -->
+      <button id="btn-theme" class="p-2 rounded-xl bg-journal-purple/60 dark:bg-journal-ink/50 hover:opacity-90 transition">
+        <i id="theme-icon" data-lucide="moon" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- JOURNAL BOOK CONTAINER -->
+  <main class="w-full max-w-5xl flex justify-center items-center my-auto relative py-2 book-wrapper">
+    <div id="journal-book" class="journal-book shadow-2xl rounded-2xl border border-journal-ink/10">
+
+      <!-- SHEET 1: Left Page 1 (Cover) / Right Page 2 (Daily Planner) -->
+      <div class="page-sheet right-dynamic" id="sheet-1" style="z-index: 3;">
+        <!-- FRONT: PAGE 1 -->
+        <div class="page-front bg-journal-paper dark:bg-journal-darkPaper dotted-bg p-6 flex flex-col justify-between border-r border-journal-ink/10">
+          <div class="washi-tape absolute -top-2 left-10 w-28 h-7 rotate-[-3deg] z-10 opacity-80"></div>
+          <div>
+            <div class="text-center my-2">
+              <span class="font-title text-4xl font-bold text-journal-accentPink block tracking-wider" data-i18n="welcome_title">
+                ~ Bienvenido a mi Journal ~
+              </span>
+              <p class="font-hand text-base opacity-75 mt-1" data-i18n="welcome_subtitle">El comienzo de algo hermoso ✨</p>
+            </div>
+
+            <!-- Profile & Polaroids Grid -->
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+              <div class="bg-white dark:bg-neutral-800 p-2 shadow-md rounded-sm rotate-[-2deg] border border-gray-200 dark:border-neutral-700">
+                <div class="bg-journal-pink/40 dark:bg-neutral-700 h-32 rounded flex flex-col items-center justify-center text-center p-2">
+                  <i data-lucide="camera" class="w-7 h-7 text-journal-accentPink mb-1"></i>
+                  <span class="font-hand text-xs opacity-80" data-i18n="photo_placeholder">Agrega tu foto aquí</span>
+                </div>
+                <p class="font-hand text-center mt-1 text-xs text-journal-ink dark:text-journal-darkInk" data-i18n="polaroid_caption">Mis mejores momentos 🌸</p>
+              </div>
+
+              <div class="bg-journal-yellow/40 dark:bg-journal-ink/30 p-3 rounded-xl border border-dashed border-journal-ink/20 font-hand space-y-1 text-xs">
+                <h3 class="text-base font-bold border-b border-journal-ink/20 pb-0.5" data-i18n="about_me">Un poco sobre mí ♡</h3>
+                <p>✨ <span data-i18n="trait1">Soñador y creativo</span></p>
+                <p>☕ <span data-i18n="trait2">Amante del café y diarios</span></p>
+                <p>📖 <span data-i18n="trait3">Buscando mi mejor versión</span></p>
+                <p>🌿 <span data-i18n="trait4">Crear e inspirar</span></p>
+              </div>
+            </div>
+
+            <div class="mt-4 bg-journal-purple/30 dark:bg-journal-purple/10 p-3 rounded-xl font-hand relative">
+              <p class="italic text-xs" data-i18n="welcome_quote">"Estas páginas guardarán pedacitos de mi vida, sueños, personas y momentos que nunca quiero olvidar."</p>
+            </div>
+          </div>
+          <div class="text-center font-hand text-xs opacity-50">Pag 01</div>
+        </div>
+
+        <!-- BACK: PAGE 2 -->
+        <div class="page-back bg-journal-paper dark:bg-journal-darkPaper dotted-bg p-6 flex flex-col justify-between border-l border-journal-ink/10 page-scroll overflow-y-auto">
+          <div>
+            <div class="flex justify-between items-end border-b-2 border-journal-accentPink pb-1 mb-3">
+              <div>
+                <h2 class="font-title text-2xl font-bold" data-i18n="daily_planner">Planificador Diario</h2>
+                <p class="font-hand text-xs opacity-70" data-i18n="daily_quote">"Hoy también estás construyendo la vida que sueñas"</p>
+              </div>
+              <div class="text-right font-hand text-xs">
+                <span class="block text-journal-accentPink font-bold" data-i18n="today">HOY</span>
+                <span>28 Oct, 2026</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="space-y-2">
+                <div class="bg-journal-pink/30 dark:bg-journal-pink/10 p-2.5 rounded-xl">
+                  <h3 class="font-hand font-bold text-sm text-journal-accentPink flex items-center gap-1">
+                    <i data-lucide="star" class="w-3.5 h-3.5"></i> <span data-i18n="top_priorities">Top 3 Prioridades</span>
+                  </h3>
+                  <ul class="font-hand text-xs mt-1 space-y-1">
+                    <li class="flex items-center gap-1.5"><input type="checkbox" class="accent-pink-400"> <span>Revisar propuesta cliente</span></li>
+                    <li class="flex items-center gap-1.5"><input type="checkbox" class="accent-pink-400"> <span>Reunión de equipo 10:30</span></li>
+                    <li class="flex items-center gap-1.5"><input type="checkbox" class="accent-pink-400"> <span>Enviar factura de octubre</span></li>
+                  </ul>
+                </div>
+
+                <div class="bg-journal-blue/40 dark:bg-journal-blue/10 p-2.5 rounded-xl font-hand">
+                  <h3 class="font-bold text-xs flex items-center justify-between">
+                    <span class="flex items-center gap-1"><i data-lucide="droplet" class="w-3.5 h-3.5 text-blue-400"></i> <span data-i18n="water_tracker">Agua (2L)</span></span>
+                    <span id="water-count" class="font-sans font-normal">0/8</span>
+                  </h3>
+                  <div class="grid grid-cols-8 gap-1 mt-1.5" id="water-glasses"></div>
+                </div>
+              </div>
+
+              <div class="bg-journal-yellow/20 dark:bg-journal-yellow/5 p-2.5 rounded-xl">
+                <h3 class="font-hand font-bold text-sm flex items-center gap-1 border-b border-journal-ink/10 pb-1 mb-1">
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i> <span data-i18n="schedule">Horario del Día</span>
+                </h3>
+                <div class="font-hand text-xs space-y-1 max-h-36 overflow-y-auto">
+                  <div class="flex gap-2"><span class="w-8 opacity-60">07:00</span> <input type="text" placeholder="..." class="bg-transparent border-b border-dashed border-journal-ink/20 w-full focus:outline-none"></div>
+                  <div class="flex gap-2"><span class="w-8 opacity-60">09:00</span> <input type="text" value="Desayuno & lectura" class="bg-transparent border-b border-dashed border-journal-ink/20 w-full focus:outline-none"></div>
+                  <div class="flex gap-2"><span class="w-8 opacity-60">11:00</span> <input type="text" value="Sesión de Trabajo" class="bg-transparent border-b border-dashed border-journal-ink/20 w-full focus:outline-none"></div>
+                  <div class="flex gap-2"><span class="w-8 opacity-60">14:00</span> <input type="text" value="Comida y paseo" class="bg-transparent border-b border-dashed border-journal-ink/20 w-full focus:outline-none"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-center font-hand text-xs opacity-60">Pag 02</div>
+        </div>
+      </div>
+
+      <!-- SHEET 2: Left Page 3 (Habits) / Right Page 4 (Mood Tracker) -->
+      <div class="page-sheet right-dynamic" id="sheet-2" style="z-index: 2;">
+        <!-- FRONT: PAGE 3 -->
+        <div class="page-front bg-journal-paper dark:bg-journal-darkPaper dotted-bg p-6 flex flex-col justify-between border-r border-journal-ink/10 page-scroll overflow-y-auto">
+          <div>
+            <div class="text-center mb-2">
+              <h2 class="font-title text-3xl font-bold" data-i18n="habit_tracker_title">Habit Tracker</h2>
+              <p class="font-hand text-xs opacity-70" data-i18n="radial_subtitle">Registro Circular y Semanal</p>
+            </div>
+
+            <div class="flex justify-center items-center my-1 relative">
+              <svg width="180" height="180" viewBox="0 0 200 200" class="polar-grid">
+                <circle cx="100" cy="100" r="20" />
+                <circle cx="100" cy="100" r="35" />
+                <circle cx="100" cy="100" r="50" />
+                <circle cx="100" cy="100" r="65" />
+                <circle cx="100" cy="100" r="80" />
+                <line x1="100" y1="20" x2="100" y2="180" />
+                <line x1="20" y1="100" x2="180" y2="100" />
+                <circle cx="100" cy="35" r="5" fill="#f7d6d0" />
+                <circle cx="100" cy="50" r="5" fill="#e2d5f8" />
+                <circle cx="100" cy="65" r="5" fill="#d5f0e2" />
+                <circle cx="125" cy="100" r="5" fill="#fceecb" />
+              </svg>
+              <div class="absolute font-hand text-xs text-center pointer-events-none">
+                <span class="font-bold block" data-i18n="october">OCTUBRE</span>
+                <span>2026</span>
+              </div>
+            </div>
+
+            <div class="mt-2 bg-journal-paper/90 dark:bg-journal-darkPaper/90 p-2.5 rounded-xl border border-journal-ink/15">
+              <h3 class="font-hand font-bold text-xs mb-1" data-i18n="weekly_habits">Hábitos Semanales</h3>
+              <table class="w-full font-hand text-xs text-center">
+                <thead>
+                  <tr class="border-b border-journal-ink/10">
+                    <th class="text-left font-normal pb-1" data-i18n="habit_name">Hábito</th>
+                    <th>S1</th><th>S2</th><th>S3</th><th>S4</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-journal-ink/10">
+                  <tr>
+                    <td class="text-left py-1" data-i18n="h_yoga">Yoga / Ejercicio</td>
+                    <td><input type="checkbox" checked class="accent-pink-400"></td>
+                    <td><input type="checkbox" checked class="accent-pink-400"></td>
+                    <td><input type="checkbox" class="accent-pink-400"></td>
+                    <td><input type="checkbox" class="accent-pink-400"></td>
+                  </tr>
+                  <tr>
+                    <td class="text-left py-1" data-i18n="h_read">Leer 20 mins</td>
+                    <td><input type="checkbox" checked class="accent-purple-400"></td>
+                    <td><input type="checkbox" checked class="accent-purple-400"></td>
+                    <td><input type="checkbox" checked class="accent-purple-400"></td>
+                    <td><input type="checkbox" class="accent-purple-400"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="text-center font-hand text-xs opacity-60">Pag 03</div>
+        </div>
+
+        <!-- BACK: PAGE 4 -->
+        <div class="page-back bg-journal-paper dark:bg-journal-darkPaper grid-bg p-6 flex flex-col justify-between border-l border-journal-ink/10 page-scroll overflow-y-auto">
+          <div>
+            <div class="text-center mb-2">
+              <span class="washi-tape px-5 py-0.5 inline-block font-title text-2xl font-bold rounded-sm" data-i18n="mood_tracker">
+                Mood Tracker
+              </span>
+            </div>
+
+            <div class="flex justify-center gap-1.5 mb-3 font-hand text-xs flex-wrap bg-journal-yellow/30 p-1.5 rounded-xl">
+              <span class="cursor-pointer px-2 py-0.5 rounded-full bg-yellow-200 dark:text-neutral-800" data-color="#fef08a">😄 Feliz</span>
+              <span class="cursor-pointer px-2 py-0.5 rounded-full bg-pink-200 dark:text-neutral-800" data-color="#fbcfe8">🥰 Amado</span>
+              <span class="cursor-pointer px-2 py-0.5 rounded-full bg-blue-200 dark:text-neutral-800" data-color="#bfdbfe">😌 Tranquilo</span>
+              <span class="cursor-pointer px-2 py-0.5 rounded-full bg-gray-200 dark:text-neutral-800" data-color="#e5e7eb">🌧️ Triste</span>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1 font-hand text-xs text-center" id="mood-grid"></div>
+          </div>
+
+          <div class="mt-2 bg-white/50 dark:bg-black/20 p-1.5 rounded-lg font-hand text-xs text-center">
+            <span data-i18n="mood_summary">Días felices este mes: <strong id="happy-count" class="text-journal-accentPink">0</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHEET 3: Left Page 5 (Routines) / Right Page 6 (Index) -->
+      <div class="page-sheet right-dynamic" id="sheet-3" style="z-index: 1;">
+        <!-- FRONT: PAGE 5 -->
+        <div class="page-front bg-journal-paper dark:bg-journal-darkPaper dotted-bg p-6 flex flex-col justify-between border-r border-journal-ink/10 page-scroll overflow-y-auto">
+          <div>
+            <div class="text-center mb-3">
+              <h2 class="font-title text-2xl font-bold flex items-center justify-center gap-2">
+                <span>☀️</span> <span data-i18n="routines_title">Rutinas Mañana & Noche</span> <span>🌙</span>
+              </h2>
+            </div>
+
+            <div class="bg-journal-yellow/30 dark:bg-journal-yellow/10 p-3 rounded-xl mb-3 border border-journal-yellow/50">
+              <h3 class="font-hand font-bold text-base mb-1 flex items-center gap-1.5">
+                <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i>
+                <span data-i18n="morning_routine">Rutina de Mañana (7:00 AM)</span>
+              </h3>
+              <div class="space-y-1 font-hand text-xs">
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked class="accent-amber-400"> <span data-i18n="mr_1">Páginas matutinas / Diario</span></label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked class="accent-amber-400"> <span data-i18n="mr_2">Vaso de agua en ayunas</span></label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" class="accent-amber-400"> <span data-i18n="mr_3">Desayuno nutritivo</span></label>
+              </div>
+            </div>
+
+            <div class="bg-journal-purple/30 dark:bg-journal-purple/10 p-3 rounded-xl border border-journal-purple/50">
+              <h3 class="font-hand font-bold text-base mb-1 flex items-center gap-1.5">
+                <i data-lucide="moon" class="w-4 h-4 text-indigo-400"></i>
+                <span data-i18n="night_routine">Rutina de Noche (10:00 PM)</span>
+              </h3>
+              <div class="space-y-1 font-hand text-xs">
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked class="accent-indigo-400"> <span data-i18n="nr_1">Limpiar y ordenar habitación</span></label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked class="accent-indigo-400"> <span data-i18n="nr_2">Escribir agradecimientos</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="text-center font-hand text-xs opacity-60">Pag 05</div>
+        </div>
+
+        <!-- BACK: PAGE 6 -->
+        <div class="page-back bg-journal-paper dark:bg-journal-darkPaper dotted-bg p-6 flex flex-col justify-between border-l border-journal-ink/10">
+          <div>
+            <div class="border-b-2 border-journal-ink/20 pb-1 mb-3 text-center">
+              <h2 class="font-title text-3xl font-bold" data-i18n="index_title">Índice del Diario</h2>
+              <p class="font-hand text-xs opacity-70" data-i18n="index_subtitle">Estructura & Organización</p>
+            </div>
+
+            <div class="space-y-2 font-hand text-xs">
+              <div class="flex justify-between items-center hover:bg-journal-pink/20 p-1 rounded cursor-pointer transition" onclick="goToSheet(0)">
+                <span class="flex items-center gap-1.5"><i data-lucide="book" class="w-3.5 h-3.5 text-journal-accentPink"></i> <span data-i18n="idx_cover">1. Portada y Sobre Mí</span></span>
+                <span class="font-bold">Pag 01</span>
+              </div>
+              <div class="flex justify-between items-center hover:bg-journal-pink/20 p-1 rounded cursor-pointer transition" onclick="goToSheet(0)">
+                <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5 text-journal-accentPink"></i> <span data-i18n="idx_daily">2. Planificador Diario</span></span>
+                <span class="font-bold">Pag 02</span>
+              </div>
+              <div class="flex justify-between items-center hover:bg-journal-pink/20 p-1 rounded cursor-pointer transition" onclick="goToSheet(1)">
+                <span class="flex items-center gap-1.5"><i data-lucide="target" class="w-3.5 h-3.5 text-journal-accentPink"></i> <span data-i18n="idx_habits">3. Habit Tracker Circular</span></span>
+                <span class="font-bold">Pag 03</span>
+              </div>
+              <div class="flex justify-between items-center hover:bg-journal-pink/20 p-1 rounded cursor-pointer transition" onclick="goToSheet(1)">
+                <span class="flex items-center gap-1.5"><i data-lucide="smile" class="w-3.5 h-3.5 text-journal-accentPink"></i> <span data-i18n="idx_mood">4. Mood Tracker</span></span>
+                <span class="font-bold">Pag 04</span>
+              </div>
+              <div class="flex justify-between items-center hover:bg-journal-pink/20 p-1 rounded cursor-pointer transition" onclick="goToSheet(2)">
+                <span class="flex items-center gap-1.5"><i data-lucide="sun-moon" class="w-3.5 h-3.5 text-journal-accentPink"></i> <span data-i18n="idx_routines">5. Rutinas Mañana & Noche</span></span>
+                <span class="font-bold">Pag 05</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-center font-hand text-xs opacity-60">
+            <span data-i18n="end_journal">Fin del Cuaderno • 2026</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center font-hand text-xs opacity-60 py-2">
+    Bullet Journal Aesthetic • Creado con ❤️
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    const translations = {
+      es: {
+        welcome_title: "~ Bienvenido a mi Journal ~",
+        welcome_subtitle: "El comienzo de algo hermoso ✨",
+        photo_placeholder: "Agrega tu foto aquí",
+        polaroid_caption: "Mis mejores momentos 🌸",
+        about_me: "Un poco sobre mí ♡",
+        trait1: "Soñador y creativo",
+        trait2: "Amante del café y diarios",
+        trait3: "Buscando mi mejor versión",
+        trait4: "Crear e inspirar",
+        welcome_quote: '"Estas páginas guardarán pedacitos de mi vida, sueños, personas y momentos que nunca quiero olvidar."',
+        daily_planner: "Planificador Diario",
+        daily_quote: '"Hoy también estás construyendo la vida que sueñas"',
+        today: "HOY",
+        top_priorities: "Top 3 Prioridades",
+        water_tracker: "Agua (2L)",
+        schedule: "Horario del Día",
+        habit_tracker_title: "Habit Tracker",
+        radial_subtitle: "Registro Circular y Semanal",
+        october: "OCTUBRE",
+        weekly_habits: "Hábitos Semanales",
+        habit_name: "Hábito",
+        h_yoga: "Yoga / Ejercicio", h_read: "Leer 20 mins",
+        mood_tracker: "Mood Tracker",
+        mood_summary: "Días felices este mes: ",
+        routines_title: "Rutinas Mañana & Noche",
+        morning_routine: "Rutina de Mañana (7:00 AM)",
+        mr_1: "Páginas matutinas / Diario", mr_2: "Vaso de agua en ayunas", mr_3: "Desayuno nutritivo",
+        night_routine: "Rutina de Noche (10:00 PM)",
+        nr_1: "Limpiar y ordenar habitación", nr_2: "Escribir agradecimientos",
+        index_title: "Índice del Diario",
+        index_subtitle: "Estructura & Organización",
+        idx_cover: "1. Portada y Sobre Mí", idx_daily: "2. Planificador Diario", idx_habits: "3. Habit Tracker Circular", idx_mood: "4. Mood Tracker de 31 Días", idx_routines: "5. Rutinas Mañana & Noche",
+        end_journal: "Fin del Cuaderno • 2026"
+      },
+      en: {
+        welcome_title: "~ Welcome to my Journal ~",
+        welcome_subtitle: "The beginning of something beautiful ✨",
+        photo_placeholder: "Add your photo here",
+        polaroid_caption: "My best moments 🌸",
+        about_me: "A Little About Me ♡",
+        trait1: "Dreamer & creative soul",
+        trait2: "Coffee & journal lover",
+        trait3: "Becoming my best self",
+        trait4: "Create & inspire",
+        welcome_quote: '"These pages will hold pieces of my life, memories, people and moments I never want to forget."',
+        daily_planner: "Daily Planner",
+        daily_quote: '"Today you are also building the life of your dreams"',
+        today: "TODAY",
+        top_priorities: "Top 3 Priorities",
+        water_tracker: "Water (2L)",
+        schedule: "Daily Schedule",
+        habit_tracker_title: "Habit Tracker",
+        radial_subtitle: "Circular & Weekly Tracker",
+        october: "OCTOBER",
+        weekly_habits: "Weekly Habits",
+        habit_name: "Habit",
+        h_yoga: "Yoga / Workout", h_read: "Read 20 mins",
+        mood_tracker: "Mood Tracker",
+        mood_summary: "Happy days this month: ",
+        routines_title: "Morning & Night Routine",
+        morning_routine: "Morning Routine (7:00 AM)",
+        mr_1: "Morning pages / Journal", mr_2: "Glass of water on empty stomach", mr_3: "Nutritious breakfast",
+        night_routine: "Night Routine (10:00 PM)",
+        nr_1: "Tidy up & clean room", nr_2: "Write gratitude notes",
+        index_title: "Journal Index",
+        index_subtitle: "Structure & Organization",
+        idx_cover: "1. Cover & About Me", idx_daily: "2. Daily Planner", idx_habits: "3. Circular Habit Tracker", idx_mood: "4. 31-Day Mood Tracker", idx_routines: "5. Morning & Night Routines",
+        end_journal: "End of Journal • 2026"
+      }
+    };
+
+    let currentLang = 'es';
+    let currentSheet = 0;
+    const sheets = ['sheet-1', 'sheet-2', 'sheet-3'];
+
+    window.onload = function () {
+      lucide.createIcons();
+      initWaterTracker();
+      initMoodTracker();
+      setupLanguageToggle();
+      setupThemeToggle();
+      updateNavigation();
+
+      document.getElementById('btn-prev').addEventListener('click', prevSheet);
+      document.getElementById('btn-next').addEventListener('click', nextSheet);
+    };
+
+    function updateNavigation() {
+      sheets.forEach((id, index) => {
+        const el = document.getElementById(id);
+        if (index < currentSheet) {
+          el.classList.add('flipped');
+          el.style.zIndex = index + 1;
+        } else {
+          el.classList.remove('flipped');
+          el.style.zIndex = sheets.length - index;
+        }
+      });
+
+      const pageStart = (currentSheet * 2) + 1;
+      const pageEnd = Math.min((currentSheet * 2) + 2, 6);
+      document.getElementById('page-num').innerText = `Pag ${pageStart}-${pageEnd} / 6`;
+    }
+
+    function nextSheet() {
+      if (currentSheet < sheets.length - 1) {
+        currentSheet++;
+        updateNavigation();
+      }
+    }
+
+    function prevSheet() {
+      if (currentSheet > 0) {
+        currentSheet--;
+        updateNavigation();
+      }
+    }
+
+    function goToSheet(sheetIndex) {
+      currentSheet = sheetIndex;
+      updateNavigation();
+    }
+
+    // --- WATER TRACKER LOGIC ---
+    let waterCount = 0;
+    function initWaterTracker() {
+      const container = document.getElementById('water-glasses');
+      container.innerHTML = '';
+      for (let i = 0; i < 8; i++) {
+        const glass = document.createElement('div');
+        glass.className = 'cursor-pointer p-0.5 text-center hover:scale-110 transition';
+        glass.innerHTML = '<i data-lucide="droplet" class="w-3.5 h-3.5 text-gray-300 mx-auto glass-icon"></i>';
+        glass.addEventListener('click', () => {
+          const icon = glass.querySelector('.glass-icon');
+          if (icon.classList.contains('text-blue-400')) {
+            icon.classList.remove('text-blue-400', 'fill-blue-400');
+            icon.classList.add('text-gray-300');
+            waterCount = Math.max(0, waterCount - 1);
+          } else {
+            icon.classList.remove('text-gray-300');
+            icon.classList.add('text-blue-400', 'fill-blue-400');
+            waterCount = Math.min(8, waterCount + 1);
+          }
+          document.getElementById('water-count').innerText = `${waterCount}/8`;
+        });
+        container.appendChild(glass);
+      }
+      lucide.createIcons();
+    }
+
+    // --- MOOD TRACKER LOGIC ---
+    let selectedMoodColor = '#fef08a';
+    let happyDaysCount = 0;
+
+    function initMoodTracker() {
+      const grid = document.getElementById('mood-grid');
+      grid.innerHTML = '';
+
+      document.querySelectorAll('[data-color]').forEach(el => {
+        el.addEventListener('click', () => {
+          selectedMoodColor = el.getAttribute('data-color');
+        });
+      });
+
+      for (let day = 1; day <= 31; day++) {
+        const dayBox = document.createElement('div');
+        dayBox.className = 'border border-journal-ink/20 rounded p-1 cursor-pointer hover:opacity-80 transition flex items-center justify-center bg-white/40 dark:bg-black/20 min-h-[28px]';
+        dayBox.innerText = day;
+
+        dayBox.addEventListener('click', () => {
+          dayBox.style.backgroundColor = selectedMoodColor;
+          if (selectedMoodColor === '#fef08a' || selectedMoodColor === '#fbcfe8') {
+            happyDaysCount++;
+            document.getElementById('happy-count').innerText = happyDaysCount;
+          }
+        });
+
+        grid.appendChild(dayBox);
+      }
+    }
+
+    // --- LANGUAGE TOGGLE ---
+    function setupLanguageToggle() {
+      const langBtn = document.getElementById('btn-lang');
+      const langLabel = document.getElementById('lang-label');
+
+      langBtn.addEventListener('click', () => {
+        currentLang = currentLang === 'es' ? 'en' : 'es';
+        langLabel.innerText = currentLang.toUpperCase();
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          if (translations[currentLang][key]) {
+            el.innerText = translations[currentLang][key];
+          }
+        });
+      });
+    }
+
+    // --- DARK MODE TOGGLE ---
+    function setupThemeToggle() {
+      const themeBtn = document.getElementById('btn-theme');
+      const themeIcon = document.getElementById('theme-icon');
+
+      themeBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        lucide.createIcons();
+      });
+    }
+  </script>
+</body>
+</html>
